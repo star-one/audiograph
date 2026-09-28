@@ -1,0 +1,71 @@
+/* ==========================================================================================
+   Styles for the DEMO PAGE only (page layout, and the SVG charts that demo.js draws).
+   None of this is needed to use AudioGraph itself - see audiograph.css for that.
+   ========================================================================================== */
+
+:root {
+  --ink: #212529;
+  --muted: #495057;
+  --grid: #dee2e6;
+  --paper: #ffffff;
+  --blue: #1a5fb4;        /* temperature */
+  --vermillion: #c2410c;  /* rainfall */
+  --green: #2b7a4b;       /* park visitors */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.demo-page { max-width: 60rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+.demo-page h1 { margin-bottom: 0.25rem; }
+.demo-page h2 { margin-top: 3rem; padding-top: 0.5rem; border-top: 2px solid var(--grid); }
+.demo-page h3 { margin-top: 2rem; margin-bottom: 0.5rem; }
+.demo-lede { font-size: 1.1rem; color: var(--muted); margin-top: 0; }
+.demo-tips { background: #f1f3f5; border-radius: 0.375rem; padding: 0.75rem 1rem 0.75rem 2rem; }
+
+/* ---- Charts ---- */
+.demo-chart { margin: 0; }
+.demo-chart svg { display: block; width: 100%; height: auto; }
+
+.demo-axis-line { stroke: var(--ink); stroke-width: 1.5; }
+.demo-grid { stroke: var(--grid); stroke-width: 1; }
+.demo-tick-label { font-size: 13px; fill: var(--muted); }
+.demo-axis-title { font-size: 14px; font-weight: 600; fill: var(--ink); }
+.demo-line { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.demo-point { stroke: var(--paper); stroke-width: 2; }
+.demo-median { fill: none; stroke-width: 2; }
+
+/* Bar and pie charts: the bar or slice being played is outlined, and the others are dimmed (demo.js does the dimming). */
+.demo-bar { stroke: var(--paper); stroke-width: 1; }
+.demo-bar.is-playing { stroke: var(--ink); stroke-width: 3; }
+.demo-bar-value { font-size: 12px; fill: var(--muted); }
+.demo-slice { stroke: var(--paper); stroke-width: 2; }
+.demo-slice.is-playing { stroke: var(--ink); stroke-width: 3; }
+.demo-key { font-size: 16px; fill: var(--ink); }
+.demo-key.is-playing { font-weight: 700; }
+
+/* The moving marker on line graphs: a dark line with a white outline so it shows against any colour. */
+.demo-marker-outline { stroke: #fff; stroke-width: 7; }
+.demo-marker { stroke: var(--ink); stroke-width: 3; }
+
+/* ---- Legend ---- */
+.demo-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0.5rem 0 0; padding: 0; list-style: none; font-size: 0.95rem; }
+.demo-legend li { display: flex; align-items: center; gap: 0.5rem; }
+.demo-legend svg { width: 2.5rem; height: 0.75rem; overflow: visible; }
+
+/* ---- Data table (offered alongside the audio, not instead of it) ---- */
+.demo-table { margin: 1rem 0 0; }
+.demo-table summary { cursor: pointer; }
+.demo-table table { border-collapse: collapse; margin-top: 0.5rem; }
+.demo-table th, .demo-table td { border: 1px solid var(--grid); padding: 0.25rem 0.75rem; text-align: right; }
+.demo-table th:first-child, .demo-table td:first-child { text-align: left; }
+.demo-table caption { text-align: left; font-weight: 600; padding-bottom: 0.25rem; }
+
+footer { margin-top: 3rem; color: var(--muted); font-size: 0.9rem; }

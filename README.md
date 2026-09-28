@@ -1,2 +1,369 @@
-# audiograph
-Making graphs and charts more accessible to users by have the graph play a changing tone to represent how the data changes
+# AudioGraph
+
+**Turn a line graph into sound.** AudioGraph plays a chart as sound, so people who can't see it can still perceive its shape. A line graph becomes one continuous tone that glides with the line, like a theremin or the ring of an Ondes Martenot. A bar chart or pie chart becomes a sequence of separate notes, one per bar or slice, each with its name spoken.
+
+A table of numbers is a reasonable accommodation for someone who can't see a graph, but it isn't an *alternative*: the whole point of a graph is to perceive how the data changes without reading every number. AudioGraph gives that shape a sound. Keep your data table too; the audio is meant to sit alongside it, not replace it.
+
+It is two JavaScript files and one CSS file, with **no dependencies** and no build step. It works with any chart (or none): you give it the numbers.
+
+Of those two JavaScript files, you'll only ever need to open one: `config.js` holds every setting - pitches, timing, and every word AudioGraph shows or speaks - and is meant to be read and edited. `audiograph.js` is the engine that reads it; treat it like a library you install, not a file you edit, unless you're forking AudioGraph itself.
+
+> **Try it:** open [`index.html`](index.html) in a browser. It has seven charts of made-up data: line graphs, bar charts and a pie chart, including two comparisons.
+
+## What you get
+
+- **Line graphs, bar charts and pie charts.** A line glides; a bar chart or pie chart plays one note per bar or slice, in turn, with its name spoken.
+- **One series, or two compared at once.** Two series play as different tones (a smooth sine and a buzzier sawtooth), spread slightly left and right: together, gliding, on a line graph; one after the other, bar by bar, on a bar chart. (A pie chart has only one.)
+- **Pitch follows the data.** The lowest value plays a low note, the highest a high note, and the **median** always plays the same middle note. (Each series is scaled on its own.)
+- **A "ting" every time a series crosses its median**: a higher ting going up, a lower one going down. It makes "is it above or below normal?" audible.
+- **A spoken introduction, the first time Play is pressed:** the title and a short description (lowest, median and highest values) are read aloud with each word highlighted as it is spoken. After that, Play goes straight to the graph.
+- **Labels are spoken as the graph plays** (months, years, names...), whenever the label changes.
+- **Play, Pause, Stop and a speed control** (half speed to double speed), which can be changed while playing.
+- **A small reverb**, so the tones sound like an instrument rather than a beep.
+- **A marker or highlight** on your chart, if you want one: AudioGraph tells you where it is up to (a position for a line, a bar or slice number for a bar or pie chart).
+- **Accessible controls** that you don't have to build: labelled buttons, keyboard-friendly, and only Play is visible until it is pressed.
+- **Works on iPhone and iPad** (see [Browser support](#browser-support-and-limitations)).
+
+## Files
+
+| File | What it is | Do you need it? |
+| --- | --- | --- |
+| `config.js` | Every setting: pitches, timing, the words on the buttons, and the sentences it speaks. **This is the file you're expected to edit.** | **Yes** |
+| `audiograph.js` | The engine that reads `config.js` and does the work. You shouldn't normally need to open it, and are not expected to edit it unless you're forking AudioGraph for deeper customisation. | **Yes** |
+| `audiograph.css` | Default styles for the controls. | Yes (or write your own) |
+| `index.html` | The annotated demo page. | Example only |
+| `demo.js` | Draws the seven demo charts as SVG, and calls `AudioGraph.add()` for each. | Example only |
+| `demo.css` | Styles for the demo page. | Example only |
+| `LICENSE` | MIT licence. | |
+
+`index.html` and `demo.js` are heavily commented. Read them alongside this file. `config.js` is
+also heavily commented, one setting at a time: it's designed to be read top to bottom, not just
+looked up.
+
+## Quick start
+
+**1. Add the files to your page**, in this order: `config.js` before `audiograph.js`, since
+the engine reads its settings from `config.js` as soon as it loads.
+
+```html
+<link rel="stylesheet" href="audiograph.css">
+<script src="config.js"></script>
+<script src="audiograph.js"></script>
+```
+
+**2. Put an empty element under your chart.** The controls will be built inside it.
+
+```html
+<div id="my-chart"><!-- your chart --></div>
+<div id="my-controls"></div>
+```
+
+**3. Call `AudioGraph.add()` with your data.**
+
+```html
+<script>
+  AudioGraph.add(document.getElementById('my-controls'), {
+    id: 'rainfall',                                    // unique on the page
+    title: 'Monthly rainfall in Riverton',             // announced before the graph plays
+    labels: ['January', 'February', 'March'],          // one per value; spoken as they change
+    series: [
+      { name: 'Rainfall', unit: 'millimetres', values: [78, 62, 55] }
+    ]
+  });
+</script>
+```
+
+That is a complete, working audio graph. To make the audio graph and your chart agree with each other, read [Connecting it to your chart](#connecting-it-to-your-chart).
+
+## API
+
+### `AudioGraph.add(container, options)`
+
+Builds the controls inside `container` (an element) and returns a [graph object](#the-graph-object). Throws an `Error` with a plain explanation if the options are wrong (no series, series of different lengths, a duplicate `id`...).
+
+#### Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `series` | array | *required* | One or two [series](#series). Two are played together as a comparison. |
+| `id` | string | `graph-1`, `graph-2`... | A name for this graph, unique on the page. Used in element ids. |
+| `title` | string | the series names | Announced before the graph plays, and used to label the buttons (for example "Play audio version of *title*"). |
+| `labels` | array | `1, 2, 3...` | One label for each value: the x axis (months, years, names...). Spoken as the graph plays, whenever the label changes, and used in the description ("the lowest value is 4, in January"). Write them the way you'd say them: `"January"`, not `"Jan"`. |
+| `labelPreposition` | string | `"in"` | The word between a value and its label in the description: `"in"` gives "in January"; `"under"` gives "under Attlee". |
+| `type` | string | `"line"` | `"line"`, `"bar"` or `"pie"`. See [Line graphs, bar charts and pie charts](#line-graphs-bar-charts-and-pie-charts). |
+| `medianLine` | boolean | `false` | Set to `true` **only if your chart draws the median as a line** (a pie chart has none); the description then says so. |
+| `speakLabels` | boolean | `true` | Set to `false` to stop labels being spoken while playing. |
+| `speakValues` | boolean | `false` for a bar chart, always `true` for a pie chart | For a bar chart, set to `true` to speak each bar's value as well as its name. A pie chart always speaks each slice's share, because pitch alone can't convey an exact one. Line graphs don't use this. |
+| `onPosition` | function | none | Called about 30 times a second while playing, and with `null` when playback stops. For a line graph, the current position as a row number (which can have a fraction: `2.5` is half-way between the third and fourth values). For a bar or pie chart, a slot number whose whole-number part is the bar or slice being played. |
+
+#### Series
+
+Each item in `series` is an object:
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `values` | array | **Required.** The numbers, in order, one per label. `null` (or an empty string) means missing. |
+| `name` | string | What is being measured: "Rainfall". Used in the spoken description. |
+| `unit` | string | Said after each number: `"millimetres"` gives "the lowest value is 41 millimetres". Write it as you'd say it (`"degrees Celsius"`, not `"°C"`). |
+| `axis` | string | `"left"` or `"right"`. Only for a comparison: the description then says which axis each series is on. |
+
+Every series needs the same number of values, and each needs at least two that aren't missing. A pie chart has exactly one series, and its values must add up to more than zero with none negative (they don't need to add up to 100; AudioGraph works out the shares).
+
+#### The graph object
+
+`add()` returns an object with:
+
+| Method | Description |
+| --- | --- |
+| `play()`, `pause()`, `stop()` | The same as pressing the buttons. Note that browsers only allow sound to start after a click or tap, so call `play()` from a click handler. |
+| `update(changes)` | Give it new options (for example new `series` and `labels` after your chart was redrawn, or a different `type`). Anything you leave out stays as it was. The spoken introduction is read again next time Play is pressed. |
+| `destroy()` | Stops the sound and removes the controls. Call this when your component is removed (in a single-page app). |
+
+### Other functions
+
+| Function | Description |
+| --- | --- |
+| `AudioGraph.median(values)` | The statistical median of an array of numbers (`null`s ignored), or `null` if there are none. Use it to draw the median line on your chart, so it is exactly the number the sound is built around. |
+| `AudioGraph.stopAll()` | Stops whatever is playing. |
+| `AudioGraph.isSupported()` | `true` if this browser has the Web Audio API. |
+| `AudioGraph.config` | All the settings. See [Configuration](#configuration). |
+
+Only one graph plays at a time: pressing Play on another graph stops the first.
+
+## Line graphs, bar charts and pie charts
+
+Set `type` in the options: `"line"` (the default), `"bar"` or `"pie"`. The three sound different, because they mean different things:
+
+- **`"line"`** — one continuous tone glides along a smooth curve through the values, as described above.
+- **`"bar"`** — a bar chart is a set of separate things, not a continuous change, so a gliding tone would suggest a connection that isn't there. Each bar is played as its own short note instead, in order, with a small gap before the next so that two equal bars are still heard as two. The bar's label is spoken as its note plays. Two series (grouped bars) share each bar in turn rather than sounding together: the first series' note, then the second's, each in its own timbre (a sine tone, then a sawtooth), each scaled to its own values. A chord of two timbres is harder to pick apart than a line graph's two gliding tones, and it wouldn't scale to more series, so bars take turns instead.
+- **`"pie"`** — a pie chart has exactly one series. Each slice is played as a note whose pitch follows its **share of the whole** (not its raw value), in the order given. Because pitch alone can't convey an exact share, each slice's name and percentage are always spoken, whatever `speakValues` says. A pie has no median line to draw, so `medianLine` has no effect, but the median ting is still available.
+
+```js
+AudioGraph.add(document.getElementById('controls'), {
+  id: 'travel', type: 'bar', title: 'How residents travel to work',
+  labels: ['Car', 'Bus', 'Walk', 'Train', 'Cycle', 'Work from home'],
+  series: [{ name: 'Residents', unit: 'percent', values: [46, 17, 11, 10, 8, 8] }]
+});
+
+AudioGraph.add(document.getElementById('controls'), {
+  id: 'spending', type: 'pie', title: "Where the council's money goes",
+  labels: ['Education', 'Social care', 'Roads'],
+  series: [{ values: [152, 96, 48] }]   // shares are worked out for you; they don't need to add to 100
+});
+```
+
+For a bar or pie chart, `onPosition` is called with a **slot number** instead of a row position: its whole-number part is the bar or slice being played (`Math.floor(row)`), so `demo.js` uses it to highlight that bar or slice rather than sweep a marker. See [Connecting it to your chart](#connecting-it-to-your-chart).
+
+## Connecting it to your chart
+
+AudioGraph doesn't draw anything and doesn't care which charting library you use (Chart.js, Google Charts, D3, Highcharts, a hand-drawn SVG...). The audio needs only your numbers. Two small extras make the chart and the sound agree:
+
+### 1. Draw the median line (optional, recommended)
+
+The median is the middle of the sound, so it helps to show it on the chart as a horizontal line. Get the number from `AudioGraph.median()` and draw a line at that height however your library does it, then set `medianLine: true` so the description mentions it.
+
+```js
+var median = AudioGraph.median(values);   // e.g. 11.5
+// ...draw a horizontal line at y = 11.5 on your chart
+```
+
+For a comparison, draw one for each series on its own axis. It helps to use a dashed line in each series' colour. (`demo.js` does this.)
+
+### 2. Move a marker, or highlight the current bar or slice (optional)
+
+`onPosition` tells you where playback is up to. What the number means depends on `type`:
+
+**Line graphs** get a **row position**: `0` is the first value, `2.5` is halfway between the third and fourth values. It is `null` when playback stops.
+
+```js
+// A thin, absolutely-positioned element on top of your chart
+var marker = document.getElementById('marker');
+var plot = { left: 60, width: 700 };     // your chart's plot area, in pixels
+var rows = values.length;
+
+AudioGraph.add(controls, {
+  /* ...your options... */
+  onPosition: function (row) {
+    if (row === null) { marker.hidden = true; return; }
+    marker.hidden = false;
+    // Points running edge to edge, as in most line charts:
+    marker.style.left = (plot.left + plot.width * row / (rows - 1)) + 'px';
+    // If your chart centres each point in a slot (many category axes), use this instead:
+    // marker.style.left = (plot.left + plot.width * (row + 0.5) / rows) + 'px';
+  }
+});
+```
+
+**Bar and pie charts** get a **slot number**: its whole-number part (`Math.floor(row)`) is the bar or slice currently playing. Rather than move a marker, highlight that bar or slice and dim the rest:
+
+```js
+AudioGraph.add(controls, {
+  /* ...your options... */
+  onPosition: function (row) {
+    var current = row === null ? -1 : Math.floor(row);
+    bars.forEach(function (bar, i) { bar.classList.toggle('is-playing', i === current); });
+  }
+});
+```
+
+`demo.js` does both, inside SVG. An error thrown by your `onPosition` function never stops the sound.
+
+### If your chart data changes
+
+Call `graph.update({ labels: ..., series: [...] })` with the new data.
+
+### Frameworks (React, Vue, Svelte...)
+
+Call `AudioGraph.add()` once the container element exists (for example in an effect or `mounted` hook), keep the returned object, call `update()` when the data changes, and call `destroy()` when the component is removed.
+
+## How it sounds
+
+- **Pitch.** For each series, the lowest value plays the G below middle C, the **median** plays the G above middle C, and the highest value plays the G above the C above middle C (two octaves in all). Between those points the pitch moves in equal musical steps, on a smooth curve through the data.
+- **Why the median?** A single very high or very low value would otherwise squash everything else into one corner of the scale. The median is the same note whatever the outliers do, and the ting makes every crossing audible.
+- **The ting.** A short bell-like sound each time a series crosses its median: **higher** when it crosses upwards, **lower** when it crosses downwards. It only sounds for real crossings, not when the line just touches the median and turns back.
+- **A line comparison** plays both series at the same time: the first as a smooth sine tone slightly to the left with bell-like tings, the second as a buzzier sawtooth tone slightly to the right with shorter, higher, softer ticks. Each is scaled to its own lowest, median and highest values. Headphones help.
+- **A bar comparison** plays the same two tones, but takes turns rather than sounding together: within each bar, the first series' note plays, then the second's.
+- **Bar and pie charts** play each bar or slice as a separate note, in order, rather than a gliding tone: a bar chart is a set of separate things, and gliding between them would suggest a connection that isn't there. Every note has a quick start and a short fade, so two equal bars or slices are still heard as two, and the bar's or slice's name is spoken as its note plays.
+- **A pie chart's pitch is its share of the whole**, not its raw value, since that is what a pie shows. Its name and percentage are always spoken.
+- **Time.** A line graph takes 15 seconds at normal speed, however many values it has: each row takes the same time, so gaps keep their proper length. A bar or pie chart gives each bar or slice `slotSeconds` (1.5 seconds by default, or longer if its spoken name needs more).
+- **Missing values (`null`).** On a line graph, the line and the sound bridge the gap; if one series of a comparison has no data at the start or end, it is silent there. On a bar chart, a missing bar is simply skipped.
+- **Speed.** Half speed (30 seconds) to double speed (7.5 seconds). It can be changed while playing.
+
+## Data notes
+
+- Values should be in order. The rows are treated as **evenly spaced**, whatever the labels say: this is a line graph over a series of steps (months, years, elections...), not a scale with a proper numeric x axis.
+- A label that repeats from one row to the next is spoken only once, when it first appears. That suits "the Prime Minister in power that year": the name is said when it changes.
+- At faster speeds, a label that would land before the previous one has finished is skipped, so the graph never gets ahead of the speech.
+- Line graphs, bar charts and pie charts. Scatter plots, stacked or 100%-stacked bars, and other chart types aren't supported.
+
+## Configuration
+
+All of AudioGraph's settings live in `config.js`, as `window.AudioGraphConfig`. That object and
+`AudioGraph.config` are the same thing, so you can either edit the defaults in `config.js`
+directly, or change a setting from your own script after the page has loaded:
+
+```js
+AudioGraph.config.reverbLevel = 0;                 // no reverb
+AudioGraph.config.baseDurationSeconds = 20;        // a slower graph
+AudioGraph.config.speechLang = 'en-US';            // American voice
+AudioGraph.config.voices[0].volume = 0.15;         // quieter first tone
+AudioGraph.config.classNames.primaryButton = 'btn btn-primary';   // use your own button styles
+```
+
+Change a setting **before** calling `add()` for it to take effect.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| `baseDurationSeconds` | `15` | Length of a line graph at normal speed - though see [Timing and synchronisation](#timing-and-synchronisation) below: a graph with long or frequent spoken labels automatically runs longer than this, so its labels have time to finish before the tone moves on. |
+| `lowNote`, `highNote` | `55`, `79` | The lowest and highest notes, as MIDI numbers (55 = G below middle C, 79 = G above the C above middle C). The median plays the note half-way between them (67 = G above middle C). |
+| `voices` | two voices | The tones. Each has `waveform` (`sine`, `triangle`, `sawtooth`, `square`), `volume`, `pan` (left/right, only used when there is more than one series), an optional low-pass `cutoff`, and a `ting` (`noteUp`, `noteDown`, `level`, `wave`, `partials`). The first voice is used for a single series. |
+| `tingLookaheadSeconds` | `0.12` | How far ahead tings are scheduled, so they land exactly on time. |
+| `fadeSeconds` | `0.04` | Short fade in and out, to avoid clicks. |
+| `controlRate` | `22050` | Sample rate of the internal pitch and volume buffers. |
+| `reverbSeconds`, `reverbDecay`, `reverbLevel`, `dryLevel` | `2.5`, `3`, `0.3`, `1` | The reverb: its length, how quickly it dies away, and the balance of reverb and direct sound. |
+| `cueGapSeconds` | `0.4` | The silence AudioGraph tries to leave after one spoken label finishes before the next one may start. See [Timing and synchronisation](#timing-and-synchronisation). |
+| `speechRate`, `speechVolume` | `1.1`, `0.8` | The voice used for labels while the graph plays. |
+| `introSpeechRate`, `introSpeechVolume` | `1`, `1` | The voice used for the introduction. |
+| `highlightFallbackDelayMs` | `500` | Some voices don't report which word they are on. If none is reported after this long, the highlight is estimated instead. |
+| `speechLang` | `"en-GB"` | Language of the spoken parts. |
+| `speechCharsPerSecond` | `14` | Starting guess at how fast the voice speaks, used to predict how long a label will take to say before it has actually been heard. It corrects itself as it listens - see [Timing and synchronisation](#timing-and-synchronisation). |
+| `tickMilliseconds` | `30` | How often the marker, spoken labels and tings are updated. |
+| `slotSeconds` | `1.5` | Bar and pie charts: time given to each bar or slice at normal speed (longer if its spoken name needs it). |
+| `slotLabelPaddingSeconds` | `0.5` | Bar and pie charts: extra headroom added on top of the longest name, when working out how long each bar or slice's slot needs to be. |
+| `noteAttackSeconds`, `noteReleaseSeconds` | `0.02`, `0.08` | Bar and pie charts: how quickly each note starts, and how long it takes to fade, so equal neighbours still sound like two notes. |
+| `speeds` | five speeds | The speed menu: `{ value, name }` for each. |
+| `classNames` | none | Extra CSS classes: `button`, `primaryButton`, `select`. |
+| `text` | English | Every word the controls show or say (button names, status messages, the speed menu format). |
+| `descriptions` | English | The sentence templates the written and spoken description is built from. See [Translating](#translating). |
+
+### Timing and synchronisation
+
+A label is only useful if it's still true when you hear it. Speaking a word takes real time,
+during which a line graph's tone keeps moving, so AudioGraph predicts how long each label will
+take to say (from its length and `speechCharsPerSecond`) and uses that prediction two ways:
+
+- **Each label is scheduled to *finish* right as the tone reaches that point**, not to start
+  there and trail behind it, wherever there's room to do so.
+- **A line graph's default length adapts to fit its labels.** Before a graph first plays,
+  AudioGraph looks at the labels that will be spoken and works out the longest any single one
+  is likely to need; if `baseDurationSeconds` isn't long enough to fit it in, the graph runs
+  longer, just enough for that one label - every other graph keeps the normal length. Bar and
+  pie charts work the same way, using `slotSeconds` and `slotLabelPaddingSeconds` instead.
+
+A label only fails to get its full lead when there truly isn't room (typically because you
+picked a faster-than-normal speed than the graph was sized for) - AudioGraph gives it whatever
+lead it can rather than none, and only skips a label outright when even that isn't enough,
+rather than ever letting speech fall behind and stay behind.
+
+`speechCharsPerSecond` is only a starting guess: real voices vary, so AudioGraph adjusts it
+after each sentence of the spoken introduction, based on how long that voice actually took. A
+graph's own length is fixed once it is prepared, though, so this learning only sharpens the
+lead within a graph, not its overall length; if your voice reads noticeably faster or slower
+than the default assumes, set `speechCharsPerSecond` yourself before the first graph plays.
+
+### Styling
+
+`audiograph.css` styles the controls. Change its `--audiograph-*` custom properties for colours, or replace the file entirely. All class names start with `audiograph`.
+
+### Translating
+
+Set `AudioGraph.config.text` (the buttons and messages), `AudioGraph.config.descriptions` (the
+sentences making up the written and spoken description), and `AudioGraph.config.speechLang`, all
+in `config.js`.
+
+`descriptions` is a set of named templates, filled in with `{placeholders}` for the parts that
+change (numbers, names, labels...). For example:
+
+```js
+descriptions: {
+  lineIntro: 'This audio version plays the graph {span}, taking {seconds} seconds at normal speed.',
+  lineLowest: 'The lowest value is {value}{at}.',
+  // ...
+}
+```
+
+Which templates are used depends on the chart: `lineIntro`, `lineConstant` and `lineTing` are
+line-graph-only; `barIntro`, `barConstant`, `barTing` and the `barEachNote...` pair are bar-chart-
+only; the `pie...` templates are pie-chart-only; `singleSubject`, `singleLowest`, `singleMedian`,
+`singleHighest` and `medianLineNote` are shared between a single line graph and a single bar
+chart; and everything prefixed `compare` is used only when two series are being compared. Look
+at the comments above each one in `config.js` for the full list and what each placeholder is
+given. The *wording* is all in `config.js`; *which* sentences appear, and in what order, is
+decided by the engine in `audiograph.js` (for example, the median-line sentence only appears
+when you've set `medianLine: true`), so that part isn't something translating the templates can
+change.
+
+## Accessibility notes
+
+- Only the **Play** button is shown at first. Pressing it reveals Pause, Stop, the speed control and the written description, so pages with many graphs stay uncluttered.
+- Buttons that aren't available use `aria-disabled` rather than `disabled`, so they keep keyboard focus when their state changes.
+- The status line ("Playing", "Paused"...) is **not** a live region. A screen reader announcing it would talk over the spoken introduction. If a graph can't be played, the reason is attached to the Play button with `aria-describedby`.
+- The controls are labelled with the graph's title, so several graphs on one page can be told apart.
+- Give your chart a text alternative and keep a data table available. `index.html` shows both.
+- The spoken parts use the browser's own speech (the Web Speech API), so the voice depends on the device. If speech isn't available, the graph simply plays without it.
+
+## Browser support and limitations
+
+- Needs the **Web Audio API** (all current browsers). The spoken parts also need the **Web Speech API**; without it the graph still plays.
+- Browsers only allow sound to start after a click or tap, so the graph always starts from the Play button.
+- **iPhone and iPad.** On iOS, Web Audio is normally muted by the ring/silent switch and can be blocked or interrupted. AudioGraph asks for the "playback" audio session, plays a silent sound while a graph is active as a back-up, and unlocks audio inside the tap. Side effects: music playing from other apps may pause while a graph is playing, and the lock screen may show media controls. iOS support was added recently, so please report anything odd.
+- If the browser blocks the sound, AudioGraph says "The sound is blocked. Press Play to try again."
+- Word highlighting follows the voice when it reports word positions, and is estimated when it doesn't (some online voices, for example). The estimate corrects itself as it hears the voice.
+- The description is in English (see [Translating](#translating)).
+- At most two series can be compared.
+
+### Testing status
+
+The engine is covered by automated tests that run against a simulated browser, with the Web Audio and speech APIs mocked. That checks the logic (pitches, crossings, timing, speech flow, iPhone handling, the demo page) but not how anything *sounds*, and it can't replace trying it on real devices. Please try it in your target browsers and tell us what you hear.
+
+## Contributing
+
+Issues and pull requests are welcome, particularly reports from real devices, and other languages. There is no build step: edit the files and reload `index.html`.
+
+## Licence
+
+MIT: see [`LICENSE`](LICENSE). Replace `[YOUR NAME]` in `LICENSE` and at the top of `audiograph.js` with the copyright holder before publishing.
+
+## Background
+
+AudioGraph was extracted from the [Government Performance Data Observatory](https://observatory.hustings.org.uk/), which shows government data as graphs and needed a way to let blind and partially sighted people hear their shape.

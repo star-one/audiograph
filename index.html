@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+  AudioGraph demo page.
+
+  This is a plain, flat HTML page: no build step, no framework. Open it straight from the folder
+  in a browser (double-click it), or upload the folder to any web host.
+
+  HOW THE PAGE IS PUT TOGETHER
+    config.js        settings, wording and the spoken description (edit this)
+    audiograph.js    the component itself - the engine that reads config.js (copy this; don't
+                      expect to edit it unless you're forking AudioGraph for deeper customisation)
+    audiograph.css   the component's styles          (copy this)
+    demo.css         styles for this demo page only
+    demo.js          draws the seven demo charts, then calls AudioGraph.add() for each one
+
+  For each chart, this file supplies three empty containers. demo.js fills them:
+    #chart-<id>      the chart (drawn as SVG in the demo; use your own chart if you have one)
+    #controls-<id>   the audio controls: AudioGraph.add() builds these
+    #table-<id>      the data as a table (optional, but a good companion to the audio)
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AudioGraph demo: charts you can listen to</title>
+
+  <!-- The component's default look. Themeable with CSS custom properties: see the top of audiograph.css. -->
+  <link rel="stylesheet" href="audiograph.css">
+  <!-- Only for this demo page's layout and charts. You won't need this in your own site. -->
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <div class="demo-page">
+
+    <header>
+      <h1>AudioGraph demo</h1>
+      <p class="demo-lede">
+        Seven charts of made-up data for a small town called Riverton: line graphs, bar charts and a
+        pie chart. Each one can be played as sound.
+      </p>
+
+      <ul class="demo-tips">
+        <li>Press <strong>Play</strong> under any chart. The first time, it reads out what the chart
+            shows (each word is highlighted as it is spoken), then plays it.</li>
+        <li><strong>Line graphs</strong> are one tone that glides with the line. Bar and pie charts are
+            different: <strong>each bar or slice is a separate note</strong>, played in turn, with its name spoken.
+            (Pie slices also say their share.)</li>
+        <li>In all of them, the lowest value is a low note, the median (the middle value) is always the
+            same note, and the highest is a high note.</li>
+        <li>A short <em>ting</em> sounds when the values cross the median: a higher ting going up, a lower one going down.</li>
+        <li>Headphones help with the two comparisons, where two tones play at once.</li>
+      </ul>
+
+      <!-- Without JavaScript there is no sound, and no charts in this demo. -->
+      <noscript><p><strong>This demo needs JavaScript to draw the charts and play them.</strong></p></noscript>
+    </header>
+
+    <main>
+
+      <!-- ===================================================================================
+           LINE GRAPHS
+           =================================================================================== -->
+      <h2>Line graphs</h2>
+      <p>One tone glides up and down with the line, taking 15 seconds however many values there are.</p>
+
+      <!-- GRAPH 1: a single series.
+           The three empty <div>s below are filled in by demo.js. Give each chart its own id. -->
+      <section aria-labelledby="heading-temperature">
+        <h3 id="heading-temperature">Average monthly temperature</h3>
+        <figure class="demo-chart" id="chart-temperature"></figure>
+        <div id="controls-temperature"></div>   <!-- AudioGraph puts Play, Pause, Stop and Speed here -->
+        <div id="table-temperature"></div>
+      </section>
+
+      <!-- GRAPH 2: another single series. Its median is crossed going DOWN first, then UP,
+           the opposite way round to the temperature graph, so you can hear the two tings. -->
+      <section aria-labelledby="heading-rainfall">
+        <h3 id="heading-rainfall">Monthly rainfall</h3>
+        <figure class="demo-chart" id="chart-rainfall"></figure>
+        <div id="controls-rainfall"></div>
+        <div id="table-rainfall"></div>
+      </section>
+
+      <!-- GRAPH 3: a series with a missing value. August has no data (the counter broke).
+           The line bridges the gap and the sound glides across it. -->
+      <section aria-labelledby="heading-visitors">
+        <h3 id="heading-visitors">Visitors to the park</h3>
+        <figure class="demo-chart" id="chart-visitors"></figure>
+        <div id="controls-visitors"></div>
+        <div id="table-visitors"></div>
+      </section>
+
+      <!-- GRAPH 4: a comparison. Two series (graphs 1 and 2) on one chart, each with its own
+           y axis: temperature on the left, rainfall on the right. Both play at once:
+             - series one: a smooth sine tone, a little to the left, with bell-like tings
+             - series two: a buzzier sawtooth tone, a little to the right, with higher, shorter ticks
+           Each series is scaled to its own lowest / median / highest, and has its own median. -->
+      <section aria-labelledby="heading-compare">
+        <h3 id="heading-compare">Temperature and rainfall compared</h3>
+        <figure class="demo-chart" id="chart-compare"></figure>
+        <div id="controls-compare"></div>
+        <div id="table-compare"></div>
+      </section>
+
+      <!-- ===================================================================================
+           BAR CHARTS
+           A bar chart is a set of separate things, not a continuous line, so a gliding tone
+           would be misleading. Each bar is its own note instead, with a small gap between
+           notes (so two equal bars are heard as two), and its name is spoken as it plays.
+           The median is drawn as a horizontal line, and a ting sounds where the bars move
+           from one side of it to the other. These bars are in order of size, so there is a
+           single ting, exactly where the median falls.
+           =================================================================================== -->
+      <h2>Bar charts</h2>
+      <p>Each bar is a separate note, played in turn, with its name spoken.</p>
+
+      <section aria-labelledby="heading-bars">
+        <h3 id="heading-bars">How residents travel to work</h3>
+        <figure class="demo-chart" id="chart-bars"></figure>
+        <div id="controls-bars"></div>
+        <div id="table-bars"></div>
+      </section>
+
+      <!-- A grouped bar chart works like the line comparison: both series play together for each
+           bar (a sine and a sawtooth), each with its own median and its own tings. -->
+      <section aria-labelledby="heading-bars-compare">
+        <h3 id="heading-bars-compare">How residents travel to work, 2005 and 2025</h3>
+        <figure class="demo-chart" id="chart-bars-compare"></figure>
+        <div id="controls-bars-compare"></div>
+        <div id="table-bars-compare"></div>
+      </section>
+
+      <!-- ===================================================================================
+           PIE CHART
+           A pie shows parts of a whole, so each slice's pitch follows its SHARE of the total,
+           and its name and percentage are spoken (the pitch alone can't give an exact share).
+           Slices are played in the order given, starting from the top of the pie.
+           A pie has no median line, but the ting still marks where the slices cross the median.
+           =================================================================================== -->
+      <h2>Pie chart</h2>
+      <p>Each slice is a separate note, played in turn: the bigger the slice, the higher the note. Its name and share are spoken.</p>
+
+      <section aria-labelledby="heading-pie">
+        <h3 id="heading-pie">Where the council's money goes</h3>
+        <figure class="demo-chart" id="chart-pie"></figure>
+        <div id="controls-pie"></div>
+        <div id="table-pie"></div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>Made with AudioGraph (see README.md in the repository). The data on this page is invented.</p>
+    </footer>
+  </div>
+
+  <!-- Scripts go last, so the containers above exist when they run.
+       Order matters: config.js first (the settings), then audiograph.js (it reads them and
+       defines AudioGraph), then demo.js (which uses AudioGraph). -->
+  <script src="config.js"></script>
+  <script src="audiograph.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

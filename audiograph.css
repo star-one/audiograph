@@ -1,0 +1,66 @@
+/* ==========================================================================================
+   AudioGraph - default styles for the controls.
+
+   Everything here is prefixed "audiograph" so it won't clash with your own CSS. To match your
+   site, either change the custom properties (--audiograph-*) below, or add your own classes to
+   the buttons with AudioGraph.config.classNames (e.g. { button: 'btn btn-secondary' }).
+   ========================================================================================== */
+
+.audiograph {
+  /* Colours: change these to theme the controls. */
+  --audiograph-accent: #1a5fb4;          /* buttons */
+  --audiograph-accent-text: #ffffff;     /* text on the main (Play) button */
+  --audiograph-border: #adb5bd;          /* box round the controls once they are revealed */
+  --audiograph-highlight: #ffe066;       /* the word being read aloud */
+  --audiograph-highlight-text: #000000;
+
+  margin: 0.5rem 0 1.5rem;
+  padding: 1rem;
+  /* The border is transparent until the extra controls appear, so nothing jumps when they do. */
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+}
+.audiograph.is-open { border-color: var(--audiograph-border); }
+
+/* Author styles beat the browser's own [hidden] rule, so restate it. */
+.audiograph [hidden] { display: none !important; }
+
+/* ---- Buttons ---- */
+.audiograph-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+.audiograph-button {
+  font: inherit;
+  min-width: 5rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--audiograph-accent);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--audiograph-accent);
+  cursor: pointer;
+}
+.audiograph-button-primary { background: var(--audiograph-accent); color: var(--audiograph-accent-text); }
+.audiograph-button:focus-visible,
+.audiograph-select:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+
+/* Unavailable buttons use aria-disabled (not "disabled") so they keep keyboard focus. */
+.audiograph-button[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- Status line ("Playing", "Paused"...). Deliberately not a live region: it would talk over the speech. ---- */
+.audiograph-status { margin: 0.5rem 0 0; font-weight: 600; }
+.audiograph-status:empty { display: none; }
+
+/* ---- Description, and the word currently being read aloud ----
+   (.audiograph-details wraps the description and the options. It needs no styling of its own,
+   but it is there as a hook if you want to style that part of the box.) */
+.audiograph-desc { margin: 0.75rem 0; max-width: 70ch; font-size: 0.95rem; }
+.audiograph-word { border-radius: 2px; }
+.audiograph-word.is-current {
+  background: var(--audiograph-highlight);
+  color: var(--audiograph-highlight-text);
+  box-shadow: 0 0 0 2px var(--audiograph-highlight);
+}
+
+/* ---- Options (speed) ---- */
+.audiograph-options { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; margin-top: 0.75rem; }
+.audiograph-options label { margin-right: 0.5rem; }
+.audiograph-select { font: inherit; padding: 0.3rem 0.5rem; }
