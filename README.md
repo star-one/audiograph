@@ -10,6 +10,10 @@ Of those two JavaScript files, you'll only ever need to open one: `config.js` ho
 
 > **Try it:** open [`index.html`](index.html) in a browser. It has seven charts of made-up data: line graphs, bar charts and a pie chart, including two comparisons.
 
+## Background
+
+AudioGraph was extracted from the [Government Performance Data Observatory](https://observatory.hustings.org.uk/), which shows government data as graphs and needed a way to let blind and partially sighted people hear their shape.
+
 ## What you get
 
 - **Line graphs, bar charts and pie charts.** A line glides; a bar chart or pie chart plays one note per bar or slice, in turn, with its name spoken.
@@ -363,7 +367,3 @@ Issues and pull requests are welcome, particularly reports from real devices, an
 ## Licence
 
 MIT: see [`LICENSE`](LICENSE). Replace `[YOUR NAME]` in `LICENSE` and at the top of `audiograph.js` with the copyright holder before publishing.
-
-## Background
-
-AudioGraph was extracted from the [Government Performance Data Observatory](https://observatory.hustings.org.uk/), which shows government data as graphs and needed a way to let blind and partially sighted people hear their shape.
